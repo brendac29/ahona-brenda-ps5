@@ -1,0 +1,182 @@
+---
+title: "PS5"
+author: "Ahona Roy and Brenda Castañeda"
+date: "November 9, 2024"
+format: 
+  pdf:
+    include-in-header: 
+       text: |
+         \usepackage{fvextra}
+         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+include-before-body:
+  text: |
+    \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
+      showspaces = false,
+      showtabs = false,
+      breaksymbolleft={},
+      breaklines
+    }
+output:
+  echo: false
+  eval: false
+---
+
+Partner 1: Brenda Castaneda, brendac29
+Partner 2: Ahona Roy, ahona1
+"This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: B.C./A.R.
+"I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
+Late coins used this pset: \*\*\_\_\*\* Late coins left after submission: \*\*\_\_\*\*
+
+\newpage
+
+```{python}
+#setup
+import pandas as pd
+import altair as alt
+import time
+import requests
+import lxml
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+import warnings 
+warnings.filterwarnings('ignore')
+alt.renderers.enable("png")
+```
+
+
+## Step 1: Develop initial scraper and crawler
+
+### 1. Scraping (PARTNER 1)
+
+```{python}
+# make get request from website
+url = 'https://oig.hhs.gov/fraud/enforcement/'
+response = requests.get(url)
+
+# convert into soup
+soup = BeautifulSoup(response.text, 'lxml')
+
+# scrape title of enforcement actions
+# find h2 tags with specific class 
+titles = soup.find_all('h2', class_='usa-card__heading')
+len(titles)
+#scrape elements
+titles_text = [item.get_text(strip=True) for item in titles]
+
+#scrape elements of date
+dates = soup.find_all('span', class_='text-base-dark padding-right-105')
+dates_text = [item.get_text(strip=True) for item in dates]
+
+#scrape elements of category
+categories = soup.find_all('ul', class_="display-inline add-list-reset")
+categories_text = [item.get_text(strip=True) for item in categories]
+
+#scrape elements of links
+links = soup.find_all('a', href = True)
+links = [item for item in links if '/fraud/enforcement/' in item.get('href')]
+filtered_links=links[3:23]
+links_url = [item.get('href') for item in filtered_links]
+
+#add baseline url to links
+base_url = 'https://oig.hhs.gov/'
+links_url = [urljoin(base_url, item.get('href')) for item in filtered_links]
+
+#assemble scraped elements into dataframe
+data = {
+    'Title': titles_text,
+    'Date': dates_text,
+    'Category': categories_text,
+    'Link': links_url
+}
+
+data = pd.DataFrame(data)
+
+print(data.head())
+```
+
+```{python}
+agencies = []
+for url in links_url:
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    agency_elements = soup.find_all('span', class_='padding-right-2 text-base', string="Agency:")
+    for span in agency_elements:
+        agency_name = span.find_next_sibling(text=True).strip()
+        agencies.append(agency_name)
+
+#update agencies on dataframe
+data['agency_name'] = agencies        
+```
+
+## Step 2: Making the scraper dynamic
+
+### 1. Turning the scraper into a function 
+
+* a. Pseudo-Code (PARTNER 2)
+ 
+* b. Create Dynamic Scraper (PARTNER 2)
+
+```{python}
+
+```
+
+* c. Test Partner's Code (PARTNER 1)
+
+```{python}
+
+```
+
+## Step 3: Plot data based on scraped data
+
+### 1. Plot the number of enforcement actions over time (PARTNER 2)
+
+```{python}
+
+```
+
+### 2. Plot the number of enforcement actions categorized: (PARTNER 1)
+
+* based on "Criminal and Civil Actions" vs. "State Enforcement Agencies"
+
+```{python}
+
+```
+
+* based on five topics
+
+```{python}
+
+```
+
+## Step 4: Create maps of enforcement activity
+
+### 1. Map by State (PARTNER 1)
+
+```{python}
+
+```
+
+
+### 2. Map by District (PARTNER 2)
+
+```{python}
+
+```
+
+## Extra Credit
+
+### 1. Merge zip code shapefile with population
+```{python}
+
+```
+
+### 2. Conduct spatial join
+```{python}
+
+```
+
+### 3. Map the action ratio in each district
+```{python}
+
+```
