@@ -354,7 +354,34 @@ get_enforcement_actions(1, 2021)
 ### 1. Plot the number of enforcement actions over time (PARTNER 2)
 
 ```{python}
+```{python}
+#read in data
+enforcement_actions = pd.read_csv('enforcement_actions_2021_1.csv')
 
+# Convert to datetime
+enforcement_actions['Date'] = pd.to_datetime(enforcement_actions['Date'], errors='coerce')
+
+#create month-year column
+enforcement_actions['YearMonth'] = enforcement_actions['Date'].dt.to_period('M')
+# Convert back to datetime
+enforcement_actions['YearMonth'] = enforcement_actions['YearMonth'].dt.to_timestamp()
+
+# Group by 'YearMonth' and count the occurrences 
+enforcement_monthly = enforcement_actions.groupby('YearMonth').size().reset_index(name='Count')
+
+# Set the renderer to 'default'
+alt.renderers.enable('default')
+#CGPT: I pasted this error I was getting that wasn't displaying my plot. ValueError: Saving charts in 'png' format requires the vl-convert-python package: see https://altair-viz.github.io/user_guide/saving_charts.html#png-svg-and-pdf-format
+ 
+# Create the chart
+enforcement_time = alt.Chart(enforcement_monthly).mark_line().encode(
+    x='YearMonth:T', 
+    y='Count:Q'
+).properties(
+    title='Enforcement Actions Over Time (2021-2024)'
+)
+
+enforcement_time
 ```
 
 ### 2. Plot the number of enforcement actions categorized: (PARTNER 1)
