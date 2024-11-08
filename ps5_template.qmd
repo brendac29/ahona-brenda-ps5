@@ -139,7 +139,15 @@ data['agency_name'] = agencies
 * a. Pseudo-Code (PARTNER 2)
 (1)start
 (2) check the start_year is before 2013, if it is then it prints a message and stops execution, because only data from 2013 onward is available.
-(3) 
+(3) start_date is set to the specified date and end_date is set to today's date
+(4) Then I create an empty DataFrame to store all scraped records. base_url: Defines the base URL for scraping. 'page'Sets the page number to start at 1.
+(5) Use BeautifulSoup to parse the HTML content of the page with lxml parser
+(6) Then scrape tites, dates, categories, links and agency names and then create a dataframe called 'data'
+(7) Convert date column to datetime format then do filtering and sorting.
+(8) Implement if statement to check the earliest date on the current page. If it is earlier than start_date, it breaks out of the loop.
+(9) Increment the page number to scrape the next page. Use time.sleep for a 1 second to prevent overwhelming the server. 
+(10) Filter the data to include only records within start_date to end_date
+(11) Save filtered_data to a CSV file with this name enforcement_actions_startyear_startmonth.csv. 
 
 
 * b. Create Dynamic Scraper (PARTNER 2)
