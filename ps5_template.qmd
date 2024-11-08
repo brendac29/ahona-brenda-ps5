@@ -76,6 +76,113 @@ alt.renderers.enable("png")
 * b. Create Dynamic Scraper (PARTNER 2)
 
 ```{python}
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+from datetime import datetime
+from urllib.parse import urljoin
+
+def get_enforcement_actions(start_month, start_year):
+    # Check if the year is 2013 or later
+    if start_year < 2013:
+        print("Please enter a year >= 2013, as only enforcement actions from 2013 onward are available.")
+        return None
+    
+    # Generate start date from month and year
+    start_date = datetime(start_year, start_month, 1)
+    end_date = datetime.today()
+    
+    # Log or return the start date and year
+    print(f"Starting scraping from {start_month}/{start_year} to today: {end_date.strftime('%m/%d/%Y')}")
+    
+    # Placeholder DataFrame to store results (assuming actual scraping logic fills this)
+    all_data = pd.DataFrame()
+    
+    
+    url = 'https://oig.hhs.gov/fraud/enforcement/'
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        print("Failed to retrieve the page.")
+        return None
+    
+    # Convert to BeautifulSoup
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    # Scrape titles
+    titles = soup.find_all('h2', class_='usa-card__heading')
+    titles_text = [item.get_text(strip=True) for item in titles]
+
+    # Scrape dates
+    dates = soup.find_all('span', class_='text-base-dark padding-right-105')
+    dates_text = [item.get_text(strip=True) for item in dates]
+
+    # Scrape categories
+    categories = soup.find_all('ul', class_="display-inline add-list-reset")
+    categories_text = [item.get_text(strip=True) for item in categories]
+
+    # Scrape links
+    links = soup.find_all('a', href=True)
+    links = [item for item in links if '/fraud/enforcement/' in item.get('href')]
+    filtered_links = links[3:23]  # Adjust as needed based on how many links you need
+    links_url = [item.get('href') for item in filtered_links]
+
+    # Add base URL to links
+    base_url = 'https://oig.hhs.gov/'
+    links_url = [urljoin(base_url, item) for item in links_url]
+
+    # Assemble scraped elements into DataFrame
+    data = {
+        'Title': titles_text,
+        'Date': dates_text,
+        'Category': categories_text,
+        'Link': links_url
+    }
+    
+    # Convert to DataFrame
+    data = pd.DataFrame(data)
+
+    # scrape the agency names for each link
+    agencies = []
+    for link in links_url:
+        response = requests.get(link)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Scrape agency name from the page
+        agency_elements = soup.find_all('span', class_='padding-right-2 text-base', string="Agency:")
+        for span in agency_elements:
+            agency_name = span.find_next_sibling(text=True).strip()
+            agencies.append(agency_name)
+        
+        # Sleep to prevent being blocked (scraping multiple pages)
+        time.sleep(1)
+    
+    # Update DataFrame with agency names
+    # Ensure have the same number of agency names as the number of rows
+    if len(agencies) == len(data):
+        data['Agency'] = agencies
+    else:
+        print(f"Warning: The number of agencies ({len(agencies)}) does not match the number of enforcement actions ({len(data)})")
+
+    # Filter data based on the start date
+    # Assuming `data['Date']` needs to be converted to datetime objects first
+    data['Date'] = pd.to_datetime(data['Date'], errors='coerce')
+    filtered_data = data[(data['Date'] >= start_date) & (data['Date'] <= end_date)]
+    
+    # Sort by date
+    filtered_data = filtered_data.sort_values(by='Date').reset_index(drop=True)
+
+    # Save to CSV
+    csv_filename = f"enforcement_actions_{start_year}_{start_month}.csv"
+    filtered_data.to_csv(csv_filename, index=False)
+    print(f"Data saved to {csv_filename}")
+
+    return filtered_data
+```
+
+
+```{python}
 
 ```
 
